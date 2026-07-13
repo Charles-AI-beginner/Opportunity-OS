@@ -3,6 +3,7 @@ import "./index.css"
 
 import {FeatureGrid,StepList} from "./features.jsx";
 import { useScrollThreshold } from "./animations.js";
+import Dashboard from "./dashboard.jsx";
 
 export default function LandingPage(){
 
@@ -18,6 +19,10 @@ export default function LandingPage(){
     console.log(hideOnScrollClass);
     console.log("hello")
 
+    const handleNavigation = (e) => {
+        e.preventDefault(); 
+        Dashboard();
+    };
 
     return(
         <>
@@ -118,6 +123,7 @@ export default function LandingPage(){
                             </a>
                             <a 
                             href="/demo" 
+                            onClick={handleNavigation} 
                             className="rounded-md bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-800 transition-colors shadow-sm"
                             >
                             Explore Demo {"->"}
