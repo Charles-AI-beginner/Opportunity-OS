@@ -2,7 +2,7 @@ import React from "react";
 
 export default function Footer(){
     return (
-        <footer className="bg-[#fbfcff] text-slate-600 py-12 px-6 border-t border-slate-100 font-sans">
+        <footer className="bg-[#fbfcff] text-slate-600 py-10 px-6 border-t border-slate-100 font-sans">
         <div className="max-w-7xl mx-auto">
             {/* Top Section */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8 pb-12 border-b border-slate-100">
@@ -83,7 +83,7 @@ export default function Footer(){
             </div>
             
             {/* Social Icons (Using simple text/SVGs placeholders) */}
-            <div className="flex gap-4">
+            <div className="flex gap-3">
                 <a href="#" className="hover:text-slate-600" aria-label="Twitter">
                 <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                 </a>

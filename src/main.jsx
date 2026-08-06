@@ -4,8 +4,13 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import "./index.css";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-    <BrowserRouter>
-        <App />
-    </BrowserRouter>
-);
+try{
+    ReactDOM.createRoot(document.getElementById("root")).render(
+        <BrowserRouter>
+            <App />
+        </BrowserRouter>
+    );
+}catch (error) {
+  document.body.innerHTML = `<div style="color:red; padding:40px; font-weight:bold;">🚨 CAUGHT ERROR: ${error.message}</div>`;
+}
+

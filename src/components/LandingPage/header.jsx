@@ -16,7 +16,7 @@ export default function Header(){
                 <a href="/contact" className="font-medium text-gray-600 hover:text-blue-600 transition-colors">Contact</a>
             </nav>
 
-            <div class="flex items-center gap-4">
+            <div className="flex items-center gap-4">
                 <a href="/login" className="font-medium text-gray-600 hover:text-gray-900">Log In</a>
                 <a href="/signup" className="rounded-md bg-purple-600 px-4 py-2 font-medium text-white hover:bg-purple-700 transition-colors shadow-sm">Sign Up</a>
             </div>

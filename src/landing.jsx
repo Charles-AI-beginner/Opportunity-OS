@@ -13,18 +13,17 @@ import Dashboard from "./dashboard.jsx";
 
 export default function LandingPage(){
 
-
-
     return(
         <>
             <Header/>
-            <main className="w-full bg-cover bg-center bg-no-repeat bg-fixed flex min-h-screen w-full flex-col items-center justify-center bg-white/60 gap-y-12">
+            <main className="w-full bg-cover bg-center bg-no-repeat bg-fixed flex min-h-screen flex-col items-center justify-center bg-white/60 gap-y-12">
         
                 <Main/>
-                
+
                 <GetStarted/>
-                    
+
                 <Features/>
+                
                 <HowItWorks/>
                 
                 

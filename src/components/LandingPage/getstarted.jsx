@@ -25,7 +25,7 @@ export default function GetStarted(){
                 Connect with Google
                 </a>
                 <a 
-                href="/demo" 
+                href="/dashboard" 
                 className="rounded-md bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-800 transition-colors shadow-sm"
                 >
                 Explore Demo {"->"}
