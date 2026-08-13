@@ -6,9 +6,7 @@ import "./index.css";
 
 try{
     ReactDOM.createRoot(document.getElementById("root")).render(
-        <BrowserRouter>
             <App />
-        </BrowserRouter>
     );
 }catch (error) {
   document.body.innerHTML = `<div style="color:red; padding:40px; font-weight:bold;">🚨 CAUGHT ERROR: ${error.message}</div>`;
