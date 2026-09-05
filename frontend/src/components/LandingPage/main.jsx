@@ -11,7 +11,7 @@ export default function Main(){
     };
     
     return(
-        <div className="h-screen w-full flex flex-col items-center justify-center gap-6  bg-purple-50">
+        <div className="h-screen w-full flex flex-col items-center justify-center gap-6  bg-purple-100">
                     
                     {/* 1. Interactive Logo Wrapper (Perfectly Centered) */}
             <div className="relative w-32 h-32 select-none group">

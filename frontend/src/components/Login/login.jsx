@@ -25,13 +25,26 @@ export default function OriginalHoverForm() {
 
       // 2. Handle both Sign Up and Sign In conditionally
       if (isSignUp) {
-        response = await authService.register(firstName, lastName, email, password);
+        response = await authService.register(
+          firstName,
+          lastName,
+          email,
+          password
+        );
+
+        if (response?.success) {
+          response = await authService.login(email, password);
+        }
       } else {
         response = await authService.login(email, password);
       }
 
       // 3. Handle successful response
-      if (response === 'Success' || response?.success) {
+      if (response?.success) {
+        if (!isSignUp && response.token) {
+          localStorage.setItem('token', response.token);
+        }
+
         navigate('/dashboard');
       } else {
         setErrorMessage(typeof response === 'string' ? response : 'Authentication failed');

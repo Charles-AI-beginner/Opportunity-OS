@@ -21,7 +21,7 @@ export default function HowItWorks(){
                             ahead in their career journey
                         </p>
                     <a 
-                        href="/demo" 
+                        href="/login" 
                         className="rounded-md bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-800 transition-colors shadow-sm"
                         >
                         Get Started for Free {"->"}

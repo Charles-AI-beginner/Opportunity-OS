@@ -3,7 +3,9 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const UserModel = require('./models/Users');
 const Opportunity = require('./models/Opportunities');
+const jwt = require('jsonwebtoken');
 
+const JWT_SECRET = 'opportunity-os-secret';
 
 const app = express();
 app.use(express.json());
@@ -26,7 +28,13 @@ app.post('/api/auth/login', (req, res) => {
       .then(user => {
         if (user) {
           if (user.password === password) {
-            res.json("Success");
+              const token = jwt.sign(
+                  { userId: user._id },
+                  JWT_SECRET,
+                  { expiresIn: '1d' }
+              );
+
+              res.json({ success: true, token });
           } else {
             res.json("The password is incorrect");
           }
@@ -37,9 +45,25 @@ app.post('/api/auth/login', (req, res) => {
       .catch(err => res.status(500).json({ message: err.message }));
 });
 
-app.get('/api/opportunities', async (req, res) => {
+const authenticate = (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.userId = decoded.userId;
+        next();
+    } catch (err) {
+        res.status(401).json({ message: 'Invalid or expired token' });
+    }
+};
+
+app.get('/api/opportunities', authenticate, async (req, res) => {
   try {
-    const opportunities = await Opportunity.find().sort({ createdAt: -1 });
+    const opportunities = await Opportunity.find({userId: req.userId}).sort({ createdAt: -1 });
     res.json(opportunities);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -47,9 +71,12 @@ app.get('/api/opportunities', async (req, res) => {
 });
 
 
-app.post('/api/opportunities', async (req,res) => {
+app.post('/api/opportunities', authenticate, async (req,res) => {
   try{
-    const newOpportunity = await Opportunity.create(req.body);
+    const newOpportunity = await Opportunity.create({
+      ...req.body,
+      userId: req.userId
+    });
     res.status(201).json(newOpportunity);
   }catch(err){
     res.status(500).json({ message: err.message });
@@ -57,13 +84,18 @@ app.post('/api/opportunities', async (req,res) => {
 
 })
 
-
 // UPDATE Endpoint
-app.put('/api/opportunities/:id', async (req, res) => {
+app.put('/api/opportunities/:id', authenticate, async (req, res) => {
   try {
-    const updatedOpportunity = await Opportunity.findByIdAndUpdate(
-      req.params.id,
-      req.body,
+    const updatedOpportunity = await Opportunity.findOneAndUpdate(
+      {_id : req.params.id, userId: req.userId,},
+      {
+        title,
+        company,
+        opportunityStatus,
+        dateApplied,
+        deadlineDate
+      },
       { new: true, runValidators: true } // Returns updated document
     );
     res.json(updatedOpportunity);
@@ -73,9 +105,17 @@ app.put('/api/opportunities/:id', async (req, res) => {
 });
 
 // DELETE Endpoint
-app.delete('/api/opportunities/:id', async (req, res) => {
+app.delete('/api/opportunities/:id', authenticate, async (req, res) => {
   try {
-    await Opportunity.findByIdAndDelete(req.params.id);
+    const deletedOpportunity = await Opportunity.findOneAndDelete({
+      _id : req.params.id,
+      userId : req.userId
+    });
+    if (!deletedOpportunity) {
+      return res.status(404).json({
+        message: 'Opportunity not found'
+      });
+    }
     res.json({ message: "Opportunity deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });

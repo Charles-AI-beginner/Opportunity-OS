@@ -4,7 +4,7 @@ import api from '../../../services/api';
 export default function AddOpportunityModal({ isOpen, onClose, onOpportunityAdded }){
     const [formData, setFormData] = useState({ title: '', company: '', status: 'Applied' });
     if (!isOpen) return null;
-        const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         try {
         const response = await api.post('/api/opportunities', formData);

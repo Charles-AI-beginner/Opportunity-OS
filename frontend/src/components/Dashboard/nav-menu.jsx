@@ -1,4 +1,5 @@
 import React from 'react';
+import {useState} from 'react';
 import { 
   LayoutDashboard, 
   Layers, 
@@ -6,6 +7,7 @@ import {
   Calendar 
 } from 'lucide-react';
 
+import Logout from './Logout';
 // Export the options array so other files can check valid IDs if needed
 export const navOptions = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -16,6 +18,9 @@ export const navOptions = [
 
 // Accept activeTab and setActiveTab as props from the parent
 export default function NavMenu({ activeTab, setActiveTab }) {
+
+  const [isLogoutOpen,setIsLogoutOpen] = useState(false);
+  
   return (
     <>
       <div className="flex items-center gap-2 font-bold text-gray-900 text-lg py-5 px-3">
@@ -24,7 +29,8 @@ export default function NavMenu({ activeTab, setActiveTab }) {
         </span>
         <span className="flex items-center justify-between">Opportunity OS</span>
       </div>
-      <div className="w-64 space-y-1 p-4">
+      <div className="flex flex-col h-screen">
+      <div className="flex flex-col justify-between items-center w-64 space-y-1 p-4">
         {navOptions.map((item) => {
           const IconComponent = item.icon;
           const isActive = activeTab === item.id;
@@ -41,6 +47,19 @@ export default function NavMenu({ activeTab, setActiveTab }) {
             </button>
           );
         })}
+        <div>
+          <button
+          onClick={() => setIsLogoutOpen(true)}
+          >
+              Logout
+          </button>
+        </div>
+
+        <Logout 
+          isOpen={isLogoutOpen} 
+          onClose={() => setIsLogoutOpen(false)} 
+        />
+        </div>
       </div>
     </>
   );
