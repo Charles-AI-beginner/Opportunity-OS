@@ -5,7 +5,7 @@ const {google} =  require('googleapis');
 const oauthClient = new google.auth.OAuth2({
     clientId: process.env.GOOGLE_CLIENT_ID,
     redirectUri: process.env.GOOGLE_REDIRECT_URI,
-    clientAuthentication: 'none'
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET
 });
 
 router.get('/google',(req,res)=>{

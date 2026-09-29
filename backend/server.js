@@ -10,9 +10,7 @@ const Opportunity = require('./models/Opportunities');
 const jwt = require('jsonwebtoken');
 
 const Mongo_URI = process.env.MONGO_URI;
-
 const JWT_SECRET = process.env.JWT_SECRET;
-//  Client ID from Google Cloud Console
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID; 
 
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
