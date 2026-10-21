@@ -1,13 +1,14 @@
-import React from 'react';
-import {useState} from 'react';
+import React, { useState } from 'react';
 import { 
   LayoutDashboard, 
   Layers, 
   Megaphone, 
-  Calendar 
+  Calendar,
+  LogOut 
 } from 'lucide-react';
 
 import Logout from './Logout';
+
 // Export the options array so other files can check valid IDs if needed
 export const navOptions = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -18,49 +19,61 @@ export const navOptions = [
 
 // Accept activeTab and setActiveTab as props from the parent
 export default function NavMenu({ activeTab, setActiveTab }) {
-
-  const [isLogoutOpen,setIsLogoutOpen] = useState(false);
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   
   return (
-    <>
-      <div className="flex items-center gap-2 font-bold text-gray-900 text-lg py-5 px-3">
-        <span className="text-xl">
-          <img src="/logo/logo-img.png" alt="logo image" className="w-10 h-10 object-contain" />
-        </span>
-        <span className="flex items-center justify-between">Opportunity OS</span>
-      </div>
-      <div className="flex flex-col h-screen">
-      <div className="flex flex-col justify-between items-center w-64 space-y-1 p-4">
-        {navOptions.map((item) => {
-          const IconComponent = item.icon;
-          const isActive = activeTab === item.id;
+    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between h-screen sticky top-0 p-4">
+      <div className="space-y-6">
+        {/* Brand Header */}
+        <div className="flex items-center gap-3 px-3 py-2">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/20 ring-1 ring-white/20">
+            O
+          </div>
+          <div>
+            <h1 className="font-bold text-white text-base tracking-tight leading-none">Opportunity OS</h1>
+            <span className="text-xs text-indigo-400 font-medium tracking-wide">CAREER TRACKER</span>
+          </div>
+        </div>
 
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)} // Changes state in the parent
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all
-                ${isActive ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-500 hover:bg-slate-50'}`}
-            >
-              <IconComponent size={20} className={isActive ? 'text-indigo-600' : 'text-slate-400'} />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-        <div>
-          <button
+        {/* Nav Links */}
+        <nav className="space-y-1.5">
+          {navOptions.map((item) => {
+            const IconComponent = item.icon;
+            const isActive = activeTab === item.id;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)} // Changes state in the parent
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium ${
+                  isActive 
+                    ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 shadow-inner' 
+                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                }`}
+              >
+                <IconComponent size={18} className={isActive ? 'text-indigo-400' : 'text-slate-400'} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Logout Action */}
+      <div className="pt-4 border-t border-slate-800/80">
+        <button
           onClick={() => setIsLogoutOpen(true)}
-          >
-              Logout
-          </button>
-        </div>
-
-        <Logout 
-          isOpen={isLogoutOpen} 
-          onClose={() => setIsLogoutOpen(false)} 
-        />
-        </div>
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-200 text-sm font-medium"
+        >
+          <LogOut size={18} />
+          <span>Logout</span>
+        </button>
       </div>
-    </>
+
+      <Logout 
+        isOpen={isLogoutOpen} 
+        onClose={() => setIsLogoutOpen(false)} 
+      />
+    </aside>
   );
 }
