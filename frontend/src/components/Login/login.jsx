@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, X } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
-import authService from '../../../services/authservice'; 
+import authService from '../../../services/authService'; 
 import api from '../../../services/api';
 
 export default function OriginalHoverForm() {
@@ -40,11 +40,12 @@ export default function OriginalHoverForm() {
       if (isSignUp) {
         response = await authService.register(firstName, lastName, email, password);
         
-        // Auto-login after successful registration
+        //auto login after successful registration
         if (response?.success) {
           response = await authService.login(email, password);
         }
-      } else {
+      } 
+      else {
         response = await authService.login(email, password);
       }
 
@@ -53,7 +54,8 @@ export default function OriginalHoverForm() {
           localStorage.setItem('token', response.token);
         }
         navigate('/dashboard');
-      } else {
+      } 
+      else {
         setErrorMessage(
           typeof response === 'string' 
             ? response 
@@ -61,8 +63,14 @@ export default function OriginalHoverForm() {
         );
       }
     } catch (error) {
-      const serverMessage = error.response?.data?.message || 'Server error. Please try again later.';
-      setErrorMessage(serverMessage);
+      console.log('Status:', error.response?.status);
+      console.log('Backend response:', error.response?.data);
+      console.log('Full error:', error);
+
+      setErrorMessage(
+        error.response?.data?.message ||
+        'Google authentication failed. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }

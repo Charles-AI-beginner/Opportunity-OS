@@ -4,7 +4,21 @@ const UserSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
+  googleId: { type: String, unique: true, sparse: true},
+  password: { type: String, required: false },
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationToken: {type: String, required: true},
+
+  emailVerificationExpires: {type: Date, required: false},
+
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
+  }
 });
 
 module.exports = mongoose.model('Users', UserSchema);

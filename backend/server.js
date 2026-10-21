@@ -1,6 +1,8 @@
 require('dotenv').config({path: './.env'});
 const googleAuthRoutes = require('./routes/googleAuth');
 
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -30,27 +32,61 @@ app.post('/api/auth/google', async (req, res) => {
   const { token } = req.body;
 
   try {
-    // 1. Verify Google ID token
+    // 1.Verify Google ID token
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
       audience: GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
-    const { email, given_name, family_name, sub: googleId } = payload;
 
-    // 2. Find existing user or create a new one
-    let user = await UserModel.findOne({ email });
+    if (!payload) {
+      return res.status(401).json({ message: 'Invalid Google token' });
+    }
 
-    if (!user) {
-      user = await UserModel.create({
-        firstName: given_name || 'Google',
-        lastName: family_name || 'User',
-        email: email,
-        googleId: googleId,
+    const {
+        email,
+        given_name,
+        family_name,
+        sub: googleId,
+        email_verified
+    } = payload;
+
+    if (!email || email_verified !== true) {
+      return res.status(403).json({
+        message: 'A verified Google email is required',
       });
     }
 
+    let user = await UserModel.findOne({ googleId });
+
+    if (!user) {
+
+        user = await UserModel.findOne({email});
+
+        if(!user){
+          user = await UserModel.create({
+            firstName: given_name || 'Google',
+            lastName: family_name || 'User',
+            email,
+            googleId,
+            authProvider: 'google',
+            emailVerified: email_verified === true
+          });
+        }
+        else{
+          if (user.googleId && user.googleId !== googleId) {
+            return res.status(409).json({
+              message: 'This account is linked to another Google account',
+            });
+          }
+          user.emailVerified = true;
+          user.googleId = googleId;
+          await user.save();
+
+        }
+    
+      }
     // 3. Generate standard JWT for your app
     const appToken = jwt.sign(
       { userId: user._id },
@@ -58,43 +94,138 @@ app.post('/api/auth/google', async (req, res) => {
       { expiresIn: '1d' }
     );
 
-    res.json({ success: true, token: appToken });
+    return res.json({ success: true, token: appToken });
+
   } catch (err) {
-    console.error('Google Auth Verification Error:', err);
-    res.status(400).json({ message: 'Invalid or expired Google token' });
+     console.error('Google Auth Error:', err);
+
+    // Handle duplicate-key conflicts, such as simultaneous account creation
+    if (err.code === 11000) {
+      return res.status(409).json({
+        message: 'An account with these details already exists. Please try again.',
+      });
+    }
+
+    return res.status(401).json({
+      message: 'Google sign-in failed',
+    });
   }
 });
 
 // Standard Register
-app.post('/api/auth/register', (req, res) => {
-  UserModel.create(req.body)
-    .then(user => res.json({ success: true, user }))
-    .catch(err => res.status(500).json({ message: err.message }));
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const {firstName, lastName, email, password} = req.body;
+
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({
+        message: 'All fields are required',
+      });
+    }
+
+    const existingUser = await UserModel.findOne({ email });
+
+    if (existingUser) {
+      return res.status(409).json({
+        message: 'An account with this email already exists',
+      });
+    }
+    const hashPassword = await bcrypt.hash(password, 10);
+
+    const verificationToken = crypto
+      .randomBytes(32)
+      .toString('hex');
+
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(verificationToken)
+      .digest('hex');
+
+    const verificationExpires =
+      Date.now() + 15 * 60 * 1000;
+
+    const user = await UserModel.create({
+      firstName,
+      lastName,
+      email,
+      password: hashPassword,
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: verificationExpires,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Account created successfully',
+    });
+
+  } catch (err) {
+    console.error('Registration Error:', err);
+
+    if (err.code === 11000) {
+      return res.status(409).json({
+        message: 'An account with these details already exists',
+      });
+    }
+
+    return res.status(500).json({
+      message: 'Registration failed',
+    });
+  }
 });
-
 // Standard Login
-app.post('/api/auth/login', (req, res) => {
+// Standard Login
+app.post('/api/auth/login', async (req, res) => {
+  try {
     const { email, password } = req.body;
-    
-    UserModel.findOne({ email: email })
-      .then(user => {
-        if (user) {
-          if (user.password === password) {
-              const token = jwt.sign(
-                  { userId: user._id },
-                  JWT_SECRET,
-                  { expiresIn: '1d' }
-              );
 
-              res.json({ success: true, token });
-          } else {
-            res.status(400).json({ success: false, message: "The password is incorrect" });
-          }
-        } else {
-          res.status(404).json({ success: false, message: "No record existed" });
-        }
-      })
-      .catch(err => res.status(500).json({ message: err.message }));
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required',
+      });
+    }
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'No record existed',
+      });
+    }
+
+    const passwordMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'The password is incorrect',
+      });
+    }
+
+    const token = jwt.sign(
+      { userId: user._id },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    return res.json({ success: true, token });
+
+  } catch (error) {
+    console.error(
+      'Google Auth Error:',
+      error.response?.status,
+      error.response?.data || error.message
+    );
+
+    setErrorMessage(
+      error.response?.data?.message ||
+      'Google authentication failed. Please try again.'
+    );
+  }
 });
 
 // JWT Middleware
