@@ -28,6 +28,16 @@ export default function Dashboard(){
         }
     };
 
+    const testGmailFetch = async () => {
+        try {
+            const response = await api.get('/api/gmail/opportunities');
+            console.log(response.data);
+            alert(`Fetched ${response.data.length} emails. Check the console.`);
+        } catch (error) {
+            console.error(error.response?.data || error.message);
+            alert(error.response?.data?.message || 'Gmail fetch failed');
+        }
+    };
     return(
         <>
            <div className="flex flex-row items-stretch min-h-screen bg-slate-50 w-full"> 
@@ -43,6 +53,7 @@ export default function Dashboard(){
                 {renderPage()} 
             </div> 
             {/* 2. Removed the extra disconnected </div> tag that was broken down here */}
+            <button onClick={testGmailFetch} className="flex bg-white">Check Emails</button>
 
             </div>
 

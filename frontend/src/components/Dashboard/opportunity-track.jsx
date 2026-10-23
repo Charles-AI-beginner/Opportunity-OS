@@ -50,7 +50,7 @@ export default function OpportunityGrid({ opportunities = [] }) {
         return (
           <div 
             key={feature.id} 
-            className="bg-slate-900/80 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl p-4 transition-all duration-200 flex flex-col justify-between space-y-3"
+            className="bg-slate-900/80 border border-slate-800/80 hover:border-slate-700/80 rounded-2xl transition-all duration-200 flex flex-col justify-between space-y-3"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
