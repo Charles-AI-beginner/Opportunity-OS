@@ -6,6 +6,10 @@ const OpportunitySchema = new mongoose.Schema({
     opportunityStatus: { type: String, enum: ['Applied', 'Interviewing', 'Offer', 'Rejected'], default: 'Applied' },
     dateApplied: { type: Date, default: Date.now },
     deadlineDate: { type: Date },
+    gmailMessageId: {
+        type: String,
+        default: null
+    },
     userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

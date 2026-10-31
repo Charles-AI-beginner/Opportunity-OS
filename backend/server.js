@@ -1,5 +1,6 @@
 require('dotenv').config({path: './.env'});
 const googleAuthRoutes = require('./routes/googleAuth');
+const {google} = require('googleapis')
 
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
@@ -10,6 +11,7 @@ const { OAuth2Client } = require('google-auth-library'); // 1. Import OAuth2Clie
 const UserModel = require('./models/Users');
 const Opportunity = require('./models/Opportunities');
 const jwt = require('jsonwebtoken');
+const authenticate = require('./middleware/auth');
 
 const Mongo_URI = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -228,22 +230,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// JWT Middleware
-const authenticate = (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-
-    if (!token) {
-        return res.status(401).json({ message: 'Authentication required' });
-    }
-
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.userId = decoded.userId;
-        next();
-    } catch (err) {
-        res.status(401).json({ message: 'Invalid or expired token' });
-    }
-};
 
 // GET Opportunities
 app.get('/api/opportunities', authenticate, async (req, res) => {
@@ -256,15 +242,36 @@ app.get('/api/opportunities', authenticate, async (req, res) => {
 });
 
 // CREATE Opportunity
+
+
 app.post('/api/opportunities', authenticate, async (req, res) => {
   try {
+    // Check MongoDB for an already-saved Gmail email
+    if (req.body.gmailMessageId) {
+      const existingOpportunity = await Opportunity.findOne({
+        userId: req.userId,
+        gmailMessageId: req.body.gmailMessageId
+      });
+
+      if (existingOpportunity) {
+        return res.status(409).json({
+          message: 'This email has already been saved.'
+        });
+      }
+    }
+
+    // Save only if it doesn't already exist
     const newOpportunity = await Opportunity.create({
       ...req.body,
       userId: req.userId
     });
+
     res.status(201).json(newOpportunity);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    console.error('Create opportunity error:', error);
+    res.status(500).json({
+      message: 'Could not save opportunity.'
+    });
   }
 });
 
@@ -298,6 +305,79 @@ app.delete('/api/opportunities/:id', authenticate, async (req, res) => {
   }
 });
 
+
+// FETCH POTENTIAL OPPORTUNITIES FROM GMAIL
+app.get('/api/gmail/opportunities', authenticate, async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.userId);
+
+    if (!user || !user.gmailTokens?.accessToken) {
+      return res.status(400).json({
+        message: 'Please connect your Gmail account first.'
+      });
+    }
+
+    const oauthClient = new google.auth.OAuth2({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      redirectUri: process.env.GOOGLE_REDIRECT_URI
+    });
+
+    oauthClient.setCredentials({
+      access_token: user.gmailTokens.accessToken,
+      refresh_token: user.gmailTokens.refreshToken,
+      expiry_date: user.gmailTokens.expiryDate
+    });
+
+    const gmail = google.gmail({
+      version: 'v1',
+      auth: oauthClient
+    });
+
+    const response = await gmail.users.messages.list({
+      userId: 'me',
+      q: 'newer_than:30d {internship intern job hiring application}',
+      maxResults: 20
+    });
+
+    const messages = response.data.messages || [];
+
+    const opportunities = await Promise.all(
+      messages.map(async (message) => {
+        const result = await gmail.users.messages.get({
+          userId: 'me',
+          id: message.id,
+          format: 'metadata',
+          metadataHeaders: ['Subject', 'From', 'Date']
+        });
+
+        const headers = result.data.payload.headers || [];
+
+        const getHeader = (name) =>
+          headers.find(
+            (header) => header.name.toLowerCase() === name.toLowerCase()
+          )?.value || '';
+
+        return {
+          id: message.id,
+          title: getHeader('Subject') || 'Untitled opportunity',
+          company: getHeader('From'),
+          date: getHeader('Date'),
+          snippet: result.data.snippet || ''
+        };
+      })
+    );
+
+    res.json(opportunities);
+  } catch (err) {
+    console.error('Gmail fetch error:', err.message);
+    res.status(500).json({
+      message: 'Could not fetch Gmail messages. Try reconnecting Gmail.'
+    });
+  }
+});
+
 app.listen(3001, () => {
     console.log("backend running on port 3001");
 });
+

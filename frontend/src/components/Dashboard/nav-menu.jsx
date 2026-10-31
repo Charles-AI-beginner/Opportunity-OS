@@ -44,7 +44,9 @@ export default function NavMenu({ activeTab, setActiveTab }) {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)} // Changes state in the parent
+                onClick={() => {
+                  
+                }} // Changes state in the parent
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium ${
                   isActive 
                     ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 shadow-inner' 

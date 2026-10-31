@@ -10,6 +10,11 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  gmailTokens: {
+    accessToken: { type: String },
+    refreshToken: { type: String },
+    expiryDate: { type: Number }
+  },
   emailVerificationToken: {type: String, required: true},
 
   emailVerificationExpires: {type: Date, required: false},

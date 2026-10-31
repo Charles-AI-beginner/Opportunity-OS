@@ -16,7 +16,7 @@ export default function LandingPage(){
     return(
         <>
             <Header/>
-            <main className="w-full bg-cover bg-center bg-no-repeat bg-fixed flex min-h-screen flex-col items-center justify-center bg-white/60 gap-y-12">
+            <main className="w-full bg-cover bg-center bg-no-repeat bg-fixed flex flex-col items-center justify-center bg-white/60 ">
         
                 <Main/>
 
