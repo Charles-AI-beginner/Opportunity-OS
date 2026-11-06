@@ -1,13 +1,12 @@
-import React from 'react';
-
+import React from "react";
+import { SpotlightCard } from "../../animations2";
 function FeatureGrid() {
-  // 1. Define the features array with paths referencing your public folder
   const features = [
     {
       id: 1,
-      imgSrc: "/icons/email.png", // Update with your actual filenames
+      imgSrc: "/icons/email.png",
       title: "Email Tracking",
-      desc: "Automatically finds internships and scholarships from your Emails"
+      desc: "Automatically finds internships from your Emails"
     },
     {
       id: 2,
@@ -23,12 +22,6 @@ function FeatureGrid() {
     },
     {
       id: 4,
-      imgSrc: "/icons/school.png",
-      title: "DTU Notice Tracker",
-      desc: "Real-time updates from DTU website for notices, drives, events and more"
-    },
-    {
-      id: 5,
       imgSrc: "/icons/graph.png",
       title: "Smart Dashboard",
       desc: "See everything that matters in one clean dashboard"
@@ -36,33 +29,38 @@ function FeatureGrid() {
   ];
 
   return (
-    // 2. The main parent container configured for 5 layout columns on desktop
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-      
-      {/* 3. Dynamic layout generator loops through all five items in one go */}
+    <div className="flex flex-wrap items-stretch justify-center gap-6 w-full max-w-full lg:max-w-[90vw] mx-auto px-6 py-8">
       {features.map((feature) => (
-        <div 
+        <SpotlightCard 
           key={feature.id} 
-          className="flex flex-col items-start bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm px-3 py-3"
+          className="flex-1 min-w-[220px] max-w-[280px] cursor-pointer"
         >
-          {/* Main card illustration image handling layout normalization */}
-          <img 
-            src={feature.imgSrc} 
-            alt={feature.title} 
-            className="w-10 h-10 object-contain mb-3" 
-          />
-          
-          {/* Uniformly scales typography sizing variables exactly to your layout requirements */}
-          <p className="text-[25px] text-black font-medium mb-1">
-            {feature.title}
-          </p>
-          
-          <p className="text-[22px] text-gray-600 leading-snug">
-            {feature.desc}
-          </p>
-        </div>
-      ))}
+          {/* Top Info Section */}
+          <div className="flex flex-col items-start">
+            <div className="w-fit p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 mb-5 transition-transform duration-300 group-hover:scale-110 group-hover:bg-indigo-500/20">
+              <img 
+                src={feature.imgSrc} 
+                alt={feature.title} 
+                className="w-6 h-6 object-contain" 
+              />
+            </div>
 
+            <h3 className="text-lg font-bold text-white mb-2.5 tracking-tight leading-snug transition-colors duration-300 group-hover:text-indigo-400">
+              {feature.title}
+            </h3>
+
+            <p className="text-xs md:text-sm text-slate-400 leading-relaxed font-normal opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+              {feature.desc}
+            </p>
+          </div>
+
+          {/* Bottom Hover Action (Pinned cleanly to bottom across all cards) */}
+          <div className="pt-4 flex items-center gap-1.5 text-xs font-semibold text-indigo-400 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-1 group-hover:translate-x-0">
+            <span>Explore</span>
+            <span>{"->"}</span>
+          </div>
+        </SpotlightCard>
+      ))}
     </div>
   );
 }
@@ -90,29 +88,26 @@ function StepList() {
     <div className="max-w-xl mx-auto px-6 py-12">
       <div className="flex flex-col">
         {steps.map((step, index) => (
-          /* Added relative here so the absolute line below has a solid height to scale against */
           <div 
             key={step.id} 
-            className="relative flex flex-row items-start gap-x-6 pb-12 last:pb-0"
+            className="relative flex flex-row items-start gap-x-6 pb-12 last:pb-0 group"
           >
-            {/* 1. FIXED LINE PLACEMENT: Attached directly to the step row container */}
             {index !== steps.length - 1 && (
-              <div className="absolute top-12 bottom-0 left-6 w-[4px] -translate-x-1/2 bg-purple-100 h-full" />
+              <div className="absolute top-12 bottom-0 left-6 w-[4px] -translate-x-1/2 bg-slate-800 h-full" />
             )}
 
-            {/* Left Column: Number Circle only */}
-            <div className="relative z-10 flex items-center justify-center w-12 h-12 rounded-full bg-purple-50 shrink-0 select-none">
-              <span className="text-xl font-bold text-purple-700">
+            {/* ADDED: transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400 */}
+            <div className="relative z-10 flex items-center justify-center w-12 h-12 rounded-full bg-indigo-500/10 border border-indigo-500/20 shrink-0 select-none shadow-md shadow-indigo-500/10 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 group-hover:bg-indigo-500/20">
+              <span className="text-xl font-bold text-indigo-400">
                 {step.id}
               </span>
             </div>
 
-            {/* Right Column: Text Content */}
             <div className="flex flex-col pt-2 flex-1">
-              <h3 className="text-xl font-bold text-gray-900 mb-1 text-left">
+              <h3 className="text-xl font-bold text-white mb-1 text-left tracking-tight transition-colors duration-200 group-hover:text-indigo-400">
                 {step.title}
               </h3>
-              <p className="text-gray-500 text-[17px] leading-relaxed text-left">
+              <p className="text-slate-400 text-[17px] leading-relaxed text-left font-normal">
                 {step.desc}
               </p>
             </div>
@@ -123,6 +118,4 @@ function StepList() {
   );
 }
 
-
-
-export {FeatureGrid, StepList};
+export { FeatureGrid, StepList };

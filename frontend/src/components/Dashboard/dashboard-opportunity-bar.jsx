@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../services/api';
+import Logout from './Logout'; // <--- IMPORT YOUR LOGOUT COMPONENT HERE
 import {
   LayoutDashboard,
   Layers,
@@ -101,52 +102,7 @@ function NavMenu({ activeTab, setActiveTab, onOpenLogout }) {
 }
 
 // ==========================================
-// 2. LOGOUT MODAL
-// ==========================================
-function LogoutModal({ isOpen, onClose }) {
-  if (!isOpen) return null;
-
-  const handleConfirmLogout = () => {
-    localStorage.removeItem('token');
-    alert('Logged out successfully');
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-sm text-white shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
-        <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
-          <LogOut size={22} />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold text-white">Log out of your account?</h2>
-          <p className="text-sm text-slate-400 mt-1">
-            You will need to sign back in to access your opportunity tracking dashboard.
-          </p>
-        </div>
-        <div className="flex items-center gap-3 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl transition-all text-sm"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirmLogout}
-            className="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-medium rounded-xl transition-all shadow-lg shadow-rose-600/20 text-sm"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
-// 3. ADD OPPORTUNITY MODAL
+// 2. ADD OPPORTUNITY MODAL
 // ==========================================
 function AddOpportunityModal({ isOpen, onClose, onOpportunityAdded }) {
   const [formData, setFormData] = useState({ title: '', company: '', status: 'Applied' });
@@ -156,7 +112,7 @@ function AddOpportunityModal({ isOpen, onClose, onOpportunityAdded }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post('/api/opportunities', {...formData, opportunityStatus: formData.status});
+      const response = await api.post('/api/opportunities', formData);
       onOpportunityAdded(response.data);
       onClose();
       setFormData({ title: '', company: '', status: 'Applied' });
@@ -241,7 +197,7 @@ function AddOpportunityModal({ isOpen, onClose, onOpportunityAdded }) {
 }
 
 // ==========================================
-// 4. GMAIL IMPORT MODAL
+// 3. GMAIL IMPORT MODAL
 // ==========================================
 function GmailImportModal({ isOpen, onClose, gmailItems = [], onOpportunitiesAdded }) {
   const [selectedIds, setSelectedIds] = useState([]);
@@ -265,81 +221,49 @@ function GmailImportModal({ isOpen, onClose, gmailItems = [], onOpportunitiesAdd
     }
   };
 
-  
-const handleImport = async () => {
-  if (selectedIds.length === 0) return;
+  const handleImport = async () => {
+    if (selectedIds.length === 0) return;
+    setIsSubmitting(true);
 
-  setIsSubmitting(true);
+    const itemsToImport = itemsList.filter((item, index) => {
+      const itemId = item.id || `item-${index}`;
+      return selectedIds.includes(itemId);
+    });
 
-  const itemsToImport = itemsList.filter((item, index) => {
-    const itemId = item.id || `item-${index}`;
-    return selectedIds.includes(itemId);
-  });
+    const addedOpportunities = [];
 
-  const addedOpportunities = [];
-  let duplicates = 0;
-  let failures = 0;
-
-  try {
-    for (const item of itemsToImport) {
-      let parsedDate = new Date().toISOString();
-
-      if (item.date) {
-        const tryDate = new Date(item.date);
-        if (!isNaN(tryDate.getTime())) {
-          parsedDate = tryDate.toISOString();
+    try {
+      for (const item of itemsToImport) {
+        let parsedDate = new Date().toISOString();
+        if (item.date) {
+          const tryDate = new Date(item.date);
+          if (!isNaN(tryDate.getTime())) {
+            parsedDate = tryDate.toISOString();
+          }
         }
-      }
 
-      const payload = {
-        title: item.title || 'Untitled Position',
-        company: item.company || 'Unknown Sender',
-        opportunityStatus: 'Applied',
-        dateApplied: parsedDate,
-        gmailMessageId: item.id || null
-      };
+        const payload = {
+          title: item.title || 'Untitled Position',
+          company: item.company || 'Unknown Sender',
+          status: 'Applied',
+          dateApplied: parsedDate
+        };
 
-      try {
-        const response = await api.post(
-          '/api/opportunities',
-          payload
-        );
-
+        const response = await api.post('/api/opportunities', payload);
         addedOpportunities.push(response.data);
-      } catch (error) {
-        if (error.response?.status === 409) {
-          duplicates++;
-        } else {
-          failures++;
-          console.error(
-            'Error importing Gmail opportunity:',
-            item.id,
-            error
-          );
-        }
       }
-    }
 
-    if (addedOpportunities.length > 0) {
-      onOpportunitiesAdded?.(addedOpportunities);
-    }
-
-    alert(
-      `Import complete!\n` +
-      `${addedOpportunities.length} added\n` +
-      `${duplicates} already saved\n` +
-      `${failures} failed`
-    );
-
-    // Close only if every item was imported or was a duplicate.
-    if (failures === 0) {
+      if (onOpportunitiesAdded) {
+        onOpportunitiesAdded(addedOpportunities);
+      }
       onClose();
+    } catch (error) {
+      console.error('Error importing Gmail opportunities:', error);
+      alert('Some items failed to import. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
+  };
 
   return (
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
@@ -450,7 +374,7 @@ const handleImport = async () => {
 }
 
 // ==========================================
-// 5. VIEW ALL MODAL COMPONENT
+// 4. VIEW ALL MODAL COMPONENT
 // ==========================================
 function ViewAllModal({ isOpen, onClose, title, opportunities = [], onSelectOpportunity, onDeleteOpportunity, getStatusBadge, formatDate }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -570,7 +494,7 @@ function ViewAllModal({ isOpen, onClose, title, opportunities = [], onSelectOppo
 }
 
 // ==========================================
-// 6. OPPORTUNITY STATS GRID
+// 5. OPPORTUNITY STATS GRID
 // ==========================================
 function OpportunityGrid({ opportunities = [] }) {
   const totalTracked = opportunities.length;
@@ -643,7 +567,7 @@ function OpportunityGrid({ opportunities = [] }) {
 }
 
 // ==========================================
-// 7. MAIN APP CONTAINER & DASHBOARD
+// 6. MAIN APP CONTAINER & DASHBOARD
 // ==========================================
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -1026,7 +950,11 @@ export default function App() {
           formatDate={formatDate}
         />
 
-        <LogoutModal isOpen={isLogoutOpen} onClose={() => setIsLogoutOpen(false)} />
+        {/* IMPORTED LOGOUT MODAL */}
+        <Logout
+          isOpen={isLogoutOpen}
+          onClose={() => setIsLogoutOpen(false)}
+        />
 
         {/* Opportunity Detail & Edit Modal */}
         {selectedOpportunity && (

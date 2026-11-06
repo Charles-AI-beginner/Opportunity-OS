@@ -73,6 +73,7 @@ app.post('/api/auth/google', async (req, res) => {
             email,
             googleId,
             authProvider: 'google',
+            emailVerificationToken: null,
             emailVerified: email_verified === true
           });
         }

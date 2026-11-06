@@ -15,7 +15,7 @@ const UserSchema = new mongoose.Schema({
     refreshToken: { type: String },
     expiryDate: { type: Number }
   },
-  emailVerificationToken: {type: String, required: true},
+  emailVerificationToken: {type: String, required: false},
 
   emailVerificationExpires: {type: Date, required: false},
 
